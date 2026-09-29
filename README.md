@@ -2,6 +2,7 @@
 
 **A Windows GUI tool to browse, download, and import ADMX/ADML administrative templates for Group Policy (Active Directory) or Microsoft Intune.**
 
+[![CI](https://github.com/kbaker827/admx-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/kbaker827/admx-manager/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
@@ -25,18 +26,20 @@ ADMX (Administrative Template) files define the policies available in Group Poli
 ### 📋 Built-in Template Catalog
 Pre-configured sources for popular products:
 
-| Product | Publisher | Category |
-|---------|-----------|----------|
-| Windows 11 2024 | Microsoft | Operating System |
-| Windows 10 22H2 | Microsoft | Operating System |
-| Microsoft Office 2021/365 | Microsoft | Productivity |
-| Microsoft Edge | Microsoft | Browser |
-| Google Chrome | Google | Browser |
-| Mozilla Firefox | Mozilla | Browser |
-| Adobe Acrobat Reader | Adobe | Productivity |
-| Citrix Workspace | Citrix | Virtualization |
-| VMware Horizon | VMware | Virtualization |
-| Zoom | Zoom | Communication |
+| Product | Publisher | Category | Download |
+|---------|-----------|----------|----------|
+| Windows 11 | Microsoft | Operating System | Opens download page |
+| Windows 10 | Microsoft | Operating System | Opens download page |
+| Microsoft Office 2021/365 | Microsoft | Productivity | Opens download page |
+| Microsoft Edge | Microsoft | Browser | Direct |
+| Google Chrome | Google | Browser | Direct |
+| Mozilla Firefox | Mozilla | Browser | Direct (latest GitHub release) |
+| Adobe Acrobat Reader | Adobe | Productivity | Opens download page |
+| Citrix Workspace | Citrix | Virtualization | Opens download page |
+| VMware Horizon | VMware | Virtualization | Opens download page |
+| Zoom | Zoom | Communication | Opens download page |
+
+Microsoft and most vendors publish a new link for every release, so templates without a stable link open their official download page in your browser. Save (and extract) those files into your download folder and ADMX Manager will import them along with the rest.
 
 ### 🎨 User-Friendly Interface
 - **Search and filter** templates by name, publisher, or category
@@ -46,7 +49,7 @@ Pre-configured sources for popular products:
 - **Activity logging** with export capability
 
 ### 📥 Download Options
-- **Automatic extraction** of ZIP archives
+- **Automatic extraction** of ZIP archives (and CAB packages on Windows)
 - **Organized storage** by publisher/category
 - **Custom download locations**
 - **Add custom sources** for internal/proprietary ADMX files
@@ -114,18 +117,18 @@ The executable will be created at `dist/ADMXManager.exe`.
 
 ### Downloading Templates
 
-1. **Select templates** from the list (check the checkbox or use "Select All")
+1. **Select templates** from the list (click the ✓ column, press Space, or use "Select All")
 2. **Choose download location** (default: `%USERPROFILE%\ADMX`)
 3. **Click "Download Selected"**
-4. Templates are automatically extracted and organized
+4. Templates are automatically extracted and organized; templates without a direct link open their download page
 
 ### Importing to Intune
 
 1. **Download** desired templates
-2. Click **"Import to Intune"** button for instructions
-3. Navigate to [Microsoft Endpoint Manager](https://endpoint.microsoft.com)
-4. Go to **Devices > Configuration profiles > Import ADMX**
-5. Upload the `.admx` and corresponding `.adml` files
+2. Click **"Import to Intune"** for instructions and the list of files to upload
+3. Navigate to the [Microsoft Intune admin center](https://intune.microsoft.com)
+4. Go to **Devices > Manage devices > Configuration > Import ADMX**
+5. Upload each `.admx` with its **en-US** `.adml` (import files others depend on first, e.g. `google.admx` before `chrome.admx`)
 
 ### Installing to Active Directory
 
@@ -159,26 +162,29 @@ Have proprietary or internal ADMX files?
 
 ## 📁 ADMX File Structure
 
-After downloading, files are organized as:
+After downloading, files are organized by publisher and category, with each archive extracted into its own folder:
 
 ```
 ADMX/
-├── Microsoft/
-│   ├── Operating System/
-│   │   ├── windows11.admx
-│   │   └── en-US/
-│   │       └── windows11.adml
-│   └── Browser/
-│       ├── edge.admx
-│       └── en-US/
-│           └── edge.adml
 ├── Google/
 │   └── Browser/
-│       ├── chrome.admx
-│       └── en-US/
-│           └── chrome.adml
+│       ├── policy_templates.zip
+│       └── policy_templates/
+│           └── windows/admx/
+│               ├── chrome.admx
+│               └── en-US/
+│                   └── chrome.adml
+├── Mozilla/
+│   └── Browser/
+│       └── policy_templates_v8.3/
+│           └── windows/
+│               ├── firefox.admx
+│               └── en-US/
+│                   └── firefox.adml
 └── ...
 ```
+
+When importing, ADMX files are copied to the root of `PolicyDefinitions` and ADML files to their language folder (`en-US`, `de-DE`, ...).
 
 ---
 
@@ -209,7 +215,8 @@ ADMX Manager uses only Python standard library modules. No `pip install` require
 - `.admx` - Administrative template files
 - `.adml` - Language-specific resource files
 - `.zip` - Compressed archives (auto-extracted)
-- `.msi` - Windows installers (downloaded, manual extraction)
+- `.cab` - Cabinet archives (auto-extracted on Windows)
+- `.msi` - Windows installers (downloaded only; never run automatically, since MSI packages can execute code. The log shows the command to unpack one you trust)
 
 ---
 
@@ -232,6 +239,18 @@ Run as Administrator when:
 - Restart Group Policy Editor
 - Verify ADMX and ADML files are in correct folders
 - Check that language folder matches your system language
+
+---
+
+## 🧪 Development
+
+Tests use only the standard library:
+
+```batch
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions runs the tests on Windows and Linux for every push and pull request, and builds `ADMXManager.exe` as a downloadable artifact.
 
 ---
 
