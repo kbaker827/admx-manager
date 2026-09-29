@@ -174,6 +174,16 @@ class DefaultSourceTests(unittest.TestCase):
 
 
 class ExtractArchiveTests(unittest.TestCase):
+    def test_msi_is_never_executed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            msi = write(os.path.join(tmp, 'pkg.msi'), b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1rest')
+            logs = []
+            with mock.patch.object(am.subprocess, 'run') as run:
+                self.assertFalse(am.extract_archive(msi, os.path.join(tmp, 'out'), logs.append))
+            run.assert_not_called()
+            self.assertFalse(os.path.exists(os.path.join(tmp, 'out')))
+            self.assertIn('msiexec /a', logs[0])
+
     def test_extracts_nested_zip(self):
         with tempfile.TemporaryDirectory() as tmp:
             inner = make_zip({'windows/admx/msedge.admx': '<policyDefinitions/>'})

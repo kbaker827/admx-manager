@@ -179,26 +179,30 @@ def resolve_download_url(info, opener=None):
 
 
 def extract_archive(archive_path, extract_dir, log, file_type=None, depth=0):
-    """Extract a ZIP, CAB or MSI into extract_dir, including archives nested inside it.
+    """Extract a ZIP or CAB into extract_dir, including archives nested inside it.
+
+    MSI packages are never run automatically: even an administrative install
+    (msiexec /a) can execute custom actions embedded in the package.
 
     Returns True if anything was extracted.
     """
     file_type = file_type or detect_file_type(archive_path)
-    os.makedirs(extract_dir, exist_ok=True)
+
+    if file_type == 'msi':
+        log(f"  Note: MSI packages are not extracted automatically. If you trust it, install it or run:\n"
+            f"    msiexec /a \"{os.path.abspath(archive_path)}\" TARGETDIR=\"{os.path.abspath(extract_dir)}\"")
+        return False
 
     if file_type == 'zip':
+        os.makedirs(extract_dir, exist_ok=True)
         with zipfile.ZipFile(archive_path, 'r') as zip_ref:
             zip_ref.extractall(extract_dir)
-    elif file_type in ('cab', 'msi'):
+    elif file_type == 'cab':
         if sys.platform != 'win32':
-            log(f"  Note: {file_type.upper()} files can only be extracted on Windows: {archive_path}")
+            log(f"  Note: CAB files can only be extracted on Windows: {archive_path}")
             return False
-        if file_type == 'cab':
-            cmd = ['expand.exe', archive_path, '-F:*', extract_dir]
-        else:
-            # Administrative install unpacks the MSI without installing it
-            cmd = ['msiexec.exe', '/a', os.path.abspath(archive_path), '/qn',
-                   f'TARGETDIR={os.path.abspath(extract_dir)}']
+        os.makedirs(extract_dir, exist_ok=True)
+        cmd = ['expand.exe', archive_path, '-F:*', extract_dir]
         result = subprocess.run(cmd, capture_output=True, timeout=600,
                                 creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         if result.returncode != 0:
@@ -506,7 +510,7 @@ class ADMXManager:
         self.extract_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(
             download_tab,
-            text="Extract archives automatically (ZIP; CAB and MSI on Windows)",
+            text="Extract archives automatically (ZIP; CAB on Windows)",
             variable=self.extract_var
         ).pack(anchor=tk.W, pady=5)
 

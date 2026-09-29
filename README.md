@@ -49,7 +49,7 @@ Microsoft and most vendors publish a new link for every release, so templates wi
 - **Activity logging** with export capability
 
 ### 📥 Download Options
-- **Automatic extraction** of ZIP archives (and CAB/MSI packages on Windows)
+- **Automatic extraction** of ZIP archives (and CAB packages on Windows)
 - **Organized storage** by publisher/category
 - **Custom download locations**
 - **Add custom sources** for internal/proprietary ADMX files
@@ -216,7 +216,7 @@ ADMX Manager uses only Python standard library modules. No `pip install` require
 - `.adml` - Language-specific resource files
 - `.zip` - Compressed archives (auto-extracted)
 - `.cab` - Cabinet archives (auto-extracted on Windows)
-- `.msi` - Windows installers (unpacked with an administrative install on Windows, nothing is installed)
+- `.msi` - Windows installers (downloaded only; never run automatically, since MSI packages can execute code. The log shows the command to unpack one you trust)
 
 ---
 
