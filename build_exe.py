@@ -14,14 +14,16 @@ def build():
     
     # Check for PyInstaller
     try:
-        import PyInstaller
+        import PyInstaller  # noqa: F401
     except ImportError:
         print("PyInstaller not found. Installing...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
     
-    # Build command
+    # Build from the script's folder; run PyInstaller as a module so it works
+    # even when Python's Scripts folder is not on PATH
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     cmd = [
-        "pyinstaller",
+        sys.executable, "-m", "PyInstaller",
         "--onefile",
         "--windowed",
         "--name", "ADMXManager",
